@@ -66,6 +66,7 @@
 #define MIC_NOISE_DB 29        // dB - Noise floor
 #define MIC_BITS 24            // valid number of bits in I2S data
 #define MIC_CONVERT(s) (s >> (SAMPLE_BITS - MIC_BITS))
+// #define MIC_CONVERT(sample) (((int32_t)(sample) >> 13) - 240200)
 #define MIC_TIMING_SHIFT 0  // Set to one to fix MSB timing for some microphones, i.e. SPH0645LM4H-x
 
 // Calculate reference amplitude value at compile time
@@ -247,7 +248,7 @@ void mic_i2s_init() {
     mode: i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
     sample_rate: SAMPLE_RATE,
     bits_per_sample: i2s_bits_per_sample_t(SAMPLE_BITS),
-    channel_format: I2S_CHANNEL_FMT_ONLY_LEFT,
+    channel_format: I2S_CHANNEL_FMT_ONLY_RIGHT,
     communication_format: i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
     intr_alloc_flags: ESP_INTR_FLAG_LEVEL1,
     dma_buf_count: DMA_BANKS,
@@ -301,6 +302,9 @@ void mic_i2s_init() {
 #define I2S_TASK_PRI 4
 #define I2S_TASK_STACK 2048
 //
+
+int32_t samples2[SAMPLES_SHORT];  //DEBUG
+
 void mic_i2s_reader_task(void* parameter) {
   mic_i2s_init();
 
@@ -324,12 +328,15 @@ void mic_i2s_reader_task(void* parameter) {
     // Convert (including shifting) integer microphone values to floats,
     // using the same buffer (assumed sample size is same as size of float),
     // to save a bit of memory
-    // SAMPLE_T* int_samples = (SAMPLE_T*)&samples;
-    float dummy_int_samples[] = { -2, 0, 0, 1 };
-    SAMPLE_T* int_samples = (SAMPLE_T*)&dummy_int_samples;  // DUMMY SAMPLES
+    SAMPLE_T* int_samples = (SAMPLE_T*)&samples;
+
+    // float dummy_int_samples[] = { -2, 0, 0, 1 };
+    // SAMPLE_T* int_samples = (SAMPLE_T*)&dummy_int_samples;  // DUMMY SAMPLES
     for (int i = 0; i < SAMPLES_SHORT; i++) samples[i] = MIC_CONVERT(int_samples[i]);
-    Serial.print("Converted Samples: ");
-    printArray(samples, 4);
+    // Serial.print("Samples: ");
+    // printArray(samples, 60);
+    // Serial.print("Converted Samples: ");
+    // printArray(samples, 4);
     // float dummy_samples[] = {0.0011296, 0.0011296, 0.0011296, 0.0011296};
 
     sum_queue_t q;
@@ -429,8 +436,8 @@ void setup() {
       Leq_samples = 0;
 
       // Serial output, customize (or remove) as needed
-      // Serial.print("dB: ");
-      // Serial.printf("%.1f\n", Leq_dB);
+      Serial.print("dB: ");
+      Serial.printf("%.1f\n", Leq_dB);
 
       // Debug only
       //Serial.printf("%u processing ticks\n", q.proc_ticks);
