@@ -436,8 +436,13 @@ void setup() {
       Leq_samples = 0;
 
       // Serial output, customize (or remove) as needed
-      Serial.print("dB: ");
-      Serial.printf("%.1f\n", Leq_dB);
+      // Serial.print("dB: ");
+      // Serial.printf("%.1f\n", Leq_dB);
+      Serial.print(0);  // To freeze the lower limit
+      Serial.print(" ");
+      Serial.print(130);  // To freeze the upper limit
+      Serial.print(" ");
+      Serial.println(Leq_dB);
 
       // Debug only
       //Serial.printf("%u processing ticks\n", q.proc_ticks);
