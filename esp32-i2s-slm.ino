@@ -330,19 +330,20 @@ void mic_i2s_reader_task(void* parameter) {
     // to save a bit of memory
     SAMPLE_T* int_samples = (SAMPLE_T*)&samples;
 
-    // float dummy_int_samples[] = { -2, 0, 0, 1 };
+    // float dummy_int_samples[] = {-981376.00, -982656.00, -982272.00, -982400.00, -983936.00, -983680.00, -984064.00, -983808.00, -985344.00, -985088.00, -986752.00, -986496.00, -988288.00, -987904.00, -988544.00, -988928.00};
     // SAMPLE_T* int_samples = (SAMPLE_T*)&dummy_int_samples;  // DUMMY SAMPLES
     for (int i = 0; i < SAMPLES_SHORT; i++) samples[i] = MIC_CONVERT(int_samples[i]);
     // Serial.print("Samples: ");
     // printArray(samples, 60);
     // Serial.print("Converted Samples: ");
-    // printArray(samples, 4);
-    // float dummy_samples[] = {0.0011296, 0.0011296, 0.0011296, 0.0011296};
+    // printArray(samples, 60);
+    // float dummy_converted_samples[] = {53248.00, 51840.00, 50816.00, 49408.00, 48896.00, 49408.00, 48256.00, 49280.00, 47616.00, 48128.00, 47616.00, 47360.00, 46464.00, 45696.00, 46464.00, 46336.00, 46592.00, 46080.00};
 
     sum_queue_t q;
     // Apply equalization and calculate Z-weighted sum of squares,
     // writes filtered samples back to the same buffer.
     q.sum_sqr_SPL = MIC_EQUALIZER.filter(samples, samples, SAMPLES_SHORT);
+    // Serial.println(q.sum_sqr_SPL);
     // float dummy_sum_sqr_SPL = 224.16;
 
     // Apply weighting and calucate weigthed sum of squares
@@ -416,11 +417,11 @@ void setup() {
     // double dummy_short_SPL_dB = 118.78;
 
     // In case of acoustic overload or below noise floor measurement, report infinty Leq value
-    // if (short_SPL_dB > MIC_OVERLOAD_DB) {
-    //   Leq_sum_sqr = INFINITY;
-    // } else if (isnan(short_SPL_dB) || (short_SPL_dB < MIC_NOISE_DB)) {
-    //   Leq_sum_sqr = -INFINITY;
-    // }
+    if (short_SPL_dB > MIC_OVERLOAD_DB) {
+      Leq_sum_sqr = MIC_OVERLOAD_DB;
+    } else if (isnan(short_SPL_dB) || (short_SPL_dB < MIC_NOISE_DB)) {
+      Leq_sum_sqr = MIC_NOISE_DB;
+    }
 
     // Accumulate Leq sum
     Leq_sum_sqr += q.sum_sqr_weighted;
